@@ -1,0 +1,23 @@
+﻿Návod k Člověče, nezlob se v Pythonu
+
+Před začátkem hry doporučuji navštívit textový soubor "settings", kde si můžete nastavit, jestli za nějakou ze čtyř barev (připadně za každou) bude hrát počítač. Pokud chcete, aby za danou barvu hrál počítač, tak za rovnítko napíšete True, pokud chcete aby za danou barvu hrál člověk, tak napište False (například: "red_ai = True" znamená, že za červenou bude hrát počítač).
+	Dále lze nastavit, který hráč bude mít první tah na pátem řádku. Pokud bychom chtěli, aby začínal například červený, tak zadáme: "first_turn = Red", celkově vybíráme z možností "Red, Blue,Orange a Green". Je důležité, aby první písmeno bylo velké (stejně u nastavování Ai)
+	Nakonec v případě, že chcete hrát proti počítači, si můžete nastavit zpomalení kroků počítače na posledním řádku. Například, kdybychom chtěli, aby počítač sekundu počkal po každém svém kroku, tak zadáme: "ai_delay_move = 1000". Jednotky jsou v milisekundách. Osobně můžu doporučit 250ms dobu zpoždění.
+	Rozlišení hry Vám bude nastaveno samo na maximální možné rozlišení vzhledem k rozlišení Vaší obrazovky.
+	Po dokončení nastavování je třeba samozřejmě soubor uložit!
+
+
+Hru zapneme spuštěním programu "CloveceMain.py".
+
+Informace o tom, co vidíte na obrazovce během hrání je popsáno na obrázku "Doplňující informace" ve stejném souboru, jako tato dokumentace.
+
+Nyní k samotnému hraní.
+Uprostřed herní plochy je hrací kostka, na kterou každý hráč musí na začátku svého tahu kliknout. Po kliknutí se mu na kostce ukáže, co mu padlo a podle toho může hrát. Pokud hráči padne číslo 6, tak může hrát znovu, zároveň také pokud hráč nemá žádné nasazené figurky a nepadne mu 6, tak je jeho tah vynechán.
+
+Po tom, co si hodíme kostkou, tak nám hra vykreslí všechny možné kroky fialovou(?) barvou (ukázáno na již zmíňeném obrázku) a pak hýbeme figurkami následovně:
+	1. Klikneme na figurku, se kterou chceme hýbat.
+	2. Klikneme na místo, kam chceme figurku pohnout.
+Pak hra zkontroluje, jestli je náš krok v souladu s pravidly (snad :) ) a v případě že ano, figurku posune.
+Pokud náš tah byl špatný a proti pravidlům, tak nám hra resetuje výběr nakliknutých figurek a políček a vracíme se na bod 1. (pouze v případě, že nějaký povolený tah existuje)
+
+Dále také lze stisknutím klávesy "z" (na české klávese) se vrátit o krok zpět (Undo), ale pokud použijeme funkci Undo dvakrát za sebou, tak informace z prvního Undo jsou ztraceny.

@@ -1,0 +1,6 @@
+red_ai = True
+blue_ai = True
+orange_ai = True
+green_ai = True
+first_turn = Red
+ai_delay_move = 1

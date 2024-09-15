@@ -1,0 +1,106 @@
+﻿Kód hry je rozdělen na dvě části:
+	Engine, kde se zhodnocuje a zpracovává input.
+	Main, kde se získává input a je zde zpracována grafická část hry.
+
+
+Engine:
+	Obsahuje tři třídy: GameState,Teams a Move
+
+	GameState:
+		Máme zde uloženou herní plochu v podobě vnořených seznamů, máme tedy seznam s 11 prvky a každý z těchto 11 prvků je seznamem o 11 		prvcích. Tuto herní plochu zde máme uloženou dvakrát, první slouži jako reprezentace současného stavu hry a druhá slouží jako referenční
+	plocha, na kterou se odkazuje, když např. kontrolujeme a provádíme tahy.
+		Pole pro pohyb je reprezentován stringy čísel 1,2...,40 a stringy čísel 41,...56 jsou označení cílových domečků jednotlivých barev.
+	Pole (referenční) vypadá nějak takto :
+               [["RS1","RS2","--","--","19","20","21","--","--","GS1","GS2"],
+            	["RS3","RS4","--","--","18","49","22","--","--","GS3","GS4"],
+            	["--","--","--","--","17","50","23","--","--","--","--"],
+            	["--","--","--","--","16","51","24","--","--","--","--"],
+           	["11","12","13","14","15","52","25","26","27","28","29"],
+          	["10","45","46","47","48","dice6","56","55","54","53","30"],
+            	["9","8","7","6","5","44","35","34","33","32","31"],
+            	["--","--","--","--","4","43","36","--","--","--","--"],
+            	["--","--","--","--","3","42","37","--","--","--","--"],
+            	["OS1","OS2","--","--","2","41","38","--","--","BS1","BS2"],
+            	["OS3","OS4","--","--","1","40","39","--","--","BS3","BS4"]]
+		
+		Zároveň GameState také obsahuje tři pomocné seznamy. Jeden na zaznamenávání kroků, druhý na zaznamenávání výsledků hodu kostky k 		příslušnému kroku a třetí zaznamenává objekty na políčku zabrané během příslušného kroku. Tyto informace se využívají ve funkci undo.
+	
+
+	Teams:
+		Slouží pro uchovávání informace hráčů. V této třídě uchováváme následující informace:
+			-name: jak budeme hráče nazývat ("Red", "Blue",...)
+			-display_loc: pomůcka pro grafický ukazatel, který nám ukazuje který hráč je na řadě.
+			-colour: označení týmů pomocí prvního písmene (Red -> "r", Blue -> "b",...), slouží ke kontrole tahů
+			-deployment: souřadnice, kde na herní ploše konkrétní tým bude nasazovat své figurky
+			-base: souřadnice, kde je na herní ploše "základna" (figurky "mimo" herní plochu) týmu, slouží ke kontrole tahů
+			-pawns: pojmenování figurek daného týmu na herní ploše, slouží ke kontrole tahů
+			-finishline: stringové číslo toho, kde se nachází políčko před domečkem týmu
+			-finishlinev: stringové číslo toho, jak číslo finishline počítat při vstupu nějaké figurky do domečku
+			-finish: souřadnice každého políčka v domečku týmu
+			-victorypoints: každý tým začíná na nule, za každou figurku v domečku dostane tým +1 victory point, pokud dostane 4, vyhrává
+			-following: lineární spojový seznam, určuje pořadí tahu hráčů
+			-ai: určuje, jestli za daný tým hraje počítač nebo ne.
+	Move:
+		Slouži pro zpracování dat o pohybu, konkrétně:
+			-startSq: počáteční souřadnice pohybu, jsou rozděleny na proměnné startRow a startCol
+			-endSq: koncové souřadnice pohybu, jsou rozděleny na proměnné endRow a endCol
+			-pieceMoved: odkazuje přímo na objekt herní plochy gamestate na souřadnicích startSq
+			-pieceCaptured: odkazuje přímo na objekt herní plochy gamestate na souřadnicích endSq
+		Dále třída Move obsahuje funkce getCloveceNotation a getRankFile, které slouží k printování informací o pohybu hráčů. (odkud, kam)
+	
+	Funkce Gamestate:
+		validMove(self, move, outcome, playing, annotation): stručně řečeno, kontroluje hromadu různých podmínek pro různé inputy tahů. Pokud 			t	ah podmínky splňuje, vrátí nám hodnotu True, v opačném případě hodnotu False.
+
+		makeMove(move,playing, outcome): tato funkce je spuštěna, pokud je splněna funkce validMove. Počáteční políčko figurky je nahrazeno 				příslušným políčkem z referenčního pole a figurka se posune na cílove políčko. V případě, že na cílovém políčku je figurka z
+			jiného týmu, tak je zavolána funkce která, přemístí zabranou figurku zpátky do základny. Všechny detaily jsou zaznamenány 				do pomocných seznamů pro funkci undoMove.
+
+		undoMove(self): Tato funkce odstraní poslední prvky ze tří zmíňených pomocných seznamů třídy GameState a dá jí se do proměnných (za 			pomocí funkce ".pop()"). a obnoví jejich pozici na herní ploše.
+		
+		checkTeamkill(self, move): Zkontroluje, jestli tah hráče nezabere jeho vlastní figurku
+
+		getAllPossibleMoves(self, playing, outcome): Projede všechy políčka ve hře, podívá se jestli na nich není figurka hráče, který je na 			řadě. Pokud ano, tak si vezme souřadnice figurky, znovu projede všechny políčka a tuto dvojici souřadnic dá do funkce 			validMove. Pokud projde dvojice souřadnic funkcí validMoves s hodnotou True, tuto dvojici souřadnic uložíme do seznamu.
+			Zároveň tato funkce slouží k tomu, že pokud je seznam získaný touto funkcí prázdný, tak hráč vynechává tah.
+		
+		getBestMove(self,moves,playing): Funkce pouze používáná Ai hráčem. Vezme si všechny možné tahy z minulé funkce a rozdělí je do tří 				seznamů, v prvním jsou tahy, které vedou do domečku, v druhém tahy, které vedou k zabrání figurky lidského hráče a v třetím 				tahu jsou tahy, které vedou k zabrání figurky jakéhokoliv hráče. U každého seznamu se zeptá, jestli neni prázdný. Pokud je,
+			tak přejde k dalšímu seznamu a ptá se znova. Pokud narazí na neprázdný seznam, vybere si z něj náhodnou dvojici souřadnic.
+			Pokud jsou všechny tři seznamy prázdné, ale existují nějaké tahy, tak si vybere náhodný z funkce výše. Pokud neexistují žádné, 				tah vynechává.
+
+		rollDice(self): hodí kostkou
+
+
+	Funkce Teams:
+		next(x): funkce oznámí, čí tah skončil, čí tah je teď a předá tah dalšímu hráčovi podle LSS.
+	
+
+
+Main:
+	Funkce main slouží k načítání grafiky a zpracovávání inputu.
+	Nejprve si zjistí informace a rozlišení obrazovky hráče a podle toho nakreslí herní plochu.
+
+	Funkce Main:
+		LoadImages(): Načte si obrázky figurek a kostky do slovníků, abychom k nim měli jednoduchý a "levný" přístup (oproti načítání ze 			souboru)
+		drawBoard(screen): načítá statickou grafiku hry, tedy domečky(kruhy), plochu po které se hráč pohybuje a okolí (bílé)
+		
+		drawPieces(screen,board): načte do rohů plochy figurky
+		
+		drawCurrentTurn(screen,board,playing): ukazuje, který hráč právě hraje
+		
+		drawDice(screen,board,outcome): podle toho, jakou hodnotu hráč při hodu kostkou dostane, program nakreslí kostku.
+		
+		drawHighlighting(screen, board, pieces): díky funkci getAllPossibleMoves velmi jednoduše můžeme zvýraznit jinou barvou všechny možné 			koncové políčka, což dělá tato funkce.
+		
+		drawGameState(screen, gs, outcome, playing): volá funkce drawBoard, drawPieces, drawDice, drawCurrentTurn.
+		
+		
+		Main(): funkce, která nám načte týmy, obrázky, settings a konečně obsahuje while cyklus, který běží dokud proměnná GameOver == True.
+
+
+
+
+
+
+
+
+
+
+
